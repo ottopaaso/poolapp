@@ -1,0 +1,13 @@
+@startuml
+
+class Turn
+
+class Player
+
+class Event
+
+class Game
+
+class Rule
+
+@enduml
