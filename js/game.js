@@ -1,11 +1,22 @@
 'use strict';
 
 const _ = require('lodash');
+const path = require('path');
+const Player = require( path.resolve( __dirname, "./player.js" ) );
 
-function Game(rules) {
+function Game(players, rules) {
   const mRules = rules;
 
-  this.players = [1, 2];
+  this.players = players;
+
+  this.start = function() {
+    if (players.length != 2) {
+      throw Error('2 players required!');
+    } else if ( !(players[0] instanceof Player && players[1] instanceof Player) ) {
+      throw Error('Players were not of Player type!');
+    }
+
+  };
 }
 
 const GameEventType = {

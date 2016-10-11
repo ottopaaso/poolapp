@@ -1,5 +1,6 @@
-const should = require('chai').should();
-const expect = require('chai').expect;
+const chai = require('chai');
+const should = chai.should();
+const expect = chai.expect;
 
 const jsroot = '../js/';
 
@@ -8,6 +9,7 @@ const Game = require(jsroot + 'game.js');
 
 const playerA = new Player('John');
 const playerB = new Player('Jane');
+const players = [playerA, playerB];
 
 describe('Player', function() {
   it('Has a name', function() {
@@ -15,6 +17,21 @@ describe('Player', function() {
     const sut = new Player(name);
     sut.name.should.equal(name);
   });
+
+  it('Is provided a function for getting GameEvents', function() {
+    const ballsOnTable = 15;
+    const eventType = Game.GameEventType.MissedBall;
+
+    const getGameEvent = function(player) {
+      return new Game.GameEvent(player, ballsOnTable, eventType);
+    };
+    const sut = new Player('John', getGameEvent);
+
+    const playerEvent = sut.getGameEvent();
+    playerEvent.player.should.equal(sut);
+    playerEvent.ballsOnTable.should.equal(ballsOnTable);
+    playerEvent.eventType.should.equal(eventType);
+  })
 });
 
 describe('GameEvent', function() {
@@ -117,9 +134,29 @@ describe('Rules', function() {
 });
 
 describe('Game', function() {
-  it('Has an array of two players', function() {
-    const sut = new Game.Game();
-    sut.players.length.should.equal(2);
+  it('Accepts only an array of two players', function() {
+    {
+      const sut = new Game.Game( [playerA, playerB] );
+      sut.players.length.should.equal(2);
+      expect(sut.start).to.not.throw();
+    }
+    {
+      const sut = new Game.Game( [playerA] );
+      expect(sut.start).to.throw(Error);
+    }
+    {
+      const sut = new Game.Game( ['John', 'Jane'] );
+      expect(sut.start).to.throw(Error);
+    }
+  });
+
+  it('Gets events from players in turns', function() {
+    const sut = new Game.Game(players);
+    sut.start();
+  });
+
+  it('Stops if an EndGame event is returned', function() {
+
   });
 
   it('Is played by the rules', function() {
@@ -129,5 +166,6 @@ describe('Game', function() {
     ];
 
     const sut = new Game.Game(rules);
+
   })
 });
