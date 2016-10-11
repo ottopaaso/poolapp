@@ -1,4 +1,7 @@
 const chai = require('chai');
+const spies = require('chai-spies');
+chai.use(spies);
+
 const should = chai.should();
 const expect = chai.expect;
 
@@ -7,14 +10,18 @@ const jsroot = '../js/';
 const Player = require(jsroot + 'player.js');
 const Game = require(jsroot + 'game.js');
 
-const playerA = new Player('John');
-const playerB = new Player('Jane');
+const eventGenerator = function(player) {
+  return new Game.GameEvent(player, 15, Game.GameEventType.EndGame);
+};
+
+const playerA = new Player('John', eventGenerator.bind(this) );
+const playerB = new Player('Jane', eventGenerator.bind(this) );
 const players = [playerA, playerB];
 
 describe('Player', function() {
   it('Has a name', function() {
     const name = 'John';
-    const sut = new Player(name);
+    const sut = new Player(name, function() { } );
     sut.name.should.equal(name);
   });
 
@@ -150,13 +157,30 @@ describe('Game', function() {
     }
   });
 
-  it('Gets events from players in turns', function() {
-    const sut = new Game.Game(players);
+  it('Gets events from players in turns until EndGame event is received', function() {
+    var firstTime = true;
+    const af = function(player) {
+      if (firstTime) {
+        firstTime = false;
+        return new Game.GameEvent(player, 14, Game.GameEventType.MissedBall);
+      }
+
+      return new Game.GameEvent(player, 2, Game.GameEventType.EndGame);
+    }
+    const afSpy = chai.spy(af);
+    const a = new Player('John', afSpy);
+
+    const bf = function(player) {
+      return new Game.GameEvent(player, 14, Game.GameEventType.MissedBall);
+    }
+    const bfSpy = chai.spy(bf);
+    const b = new Player('Jane', bfSpy);
+
+    const sut = new Game.Game([a, b]);
     sut.start();
-  });
 
-  it('Stops if an EndGame event is returned', function() {
-
+    afSpy.should.have.been.called();
+    bfSpy.should.have.been.called();
   });
 
   it('Is played by the rules', function() {

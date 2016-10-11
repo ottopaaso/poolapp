@@ -6,7 +6,8 @@ const Player = require( path.resolve( __dirname, "./player.js" ) );
 
 function Game(players, rules) {
   const mRules = rules;
-
+  const mEvents = [];
+  var mTurn = 0;
   this.players = players;
 
   this.start = function() {
@@ -16,6 +17,16 @@ function Game(players, rules) {
       throw Error('Players were not of Player type!');
     }
 
+    while (1) {
+      const player = players[mTurn % 2];
+      const event = player.getGameEvent();
+      mEvents.push( event );
+      mTurn++;
+
+      if ( _.isEqual(event.eventType, GameEventType.EndGame) ) {
+        break;
+      }
+    }
   };
 }
 
@@ -23,7 +34,8 @@ const GameEventType = {
   MissedBall: 'MissedBall',
   Foul: 'Foul',
   Safety: 'Safety',
-  NewRack: 'NewRack'
+  NewRack: 'NewRack',
+  EndGame: 'EndGame'
 }
 
 function GameEvent(player, ballsOnTable, eventType) {
