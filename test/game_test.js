@@ -75,30 +75,48 @@ describe('Rules', function() {
   describe('PottingRule', function() {
     const sut = new Game.PottingRule();
 
-    it('Counts potted balls and counts points to a Scoreboard', function() {
-      {
-        const events = [new Game.GameEvent(playerA, 5)];
-        const scoreboard = sut.apply(events);
-        scoreboard.getScore(playerA).should.equal(10);
-      }
-      {
-        const events = [ new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
-                         new Game.GameEvent(playerB, 2, Game.GameEventType.MissedBall)];
-        const scoreboard = sut.apply(events);
-        scoreboard.getScore(playerA).should.equal(5);
-        scoreboard.getScore(playerB).should.equal(8);
-      }
+    describe('Counts potted balls and counts points to a Scoreboard', function() {
+      it('case 1', function() {
+          const events = [new Game.GameEvent(playerA, 5)];
+          const scoreboard = sut.apply(events);
+          scoreboard.getScore(playerA).should.equal(10);
+      });
+
+      it('case 2', function() {;
+          const events = [ new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
+                           new Game.GameEvent(playerB, 2, Game.GameEventType.MissedBall)];
+          const scoreboard = sut.apply(events);
+          scoreboard.getScore(playerA).should.equal(5);
+          scoreboard.getScore(playerB).should.equal(8);
+      });
     });
 
-    it('Recognizes new racks', function() {
-      const events = [
-        new Game.GameEvent(playerA, 12, Game.GameEventType.MissedBall),
-        new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack)
-      ];
+    describe('Recognizes new racks', function() {
+      it('case 1', function() {
+        const events = [
+          new Game.GameEvent(playerA, 12, Game.GameEventType.MissedBall),
+          new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack)
+        ];
 
-      const scoreboard = sut.apply(events);
-      scoreboard.getScore(playerA).should.equal(3);
-      scoreboard.getScore(playerB).should.equal(11);
+        const scoreboard = sut.apply(events);
+        scoreboard.getScore(playerA).should.equal(3);
+        scoreboard.getScore(playerB).should.equal(11);
+      });
+
+      it('case 2', function() {
+        const events = [
+          new Game.GameEvent(playerA, 14, Game.GameEventType.MissedBall),
+          new Game.GameEvent(playerB, 5, Game.GameEventType.Safety),
+          new Game.GameEvent(playerA, 5, Game.GameEventType.Foul),
+          new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
+          new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
+          new Game.GameEvent(playerB, 12, Game.GameEventType.EndGame)
+        ];
+
+        const scoreboard = sut.apply(events);
+        scoreboard.getScore(playerA).should.equal(1);
+        scoreboard.getScore(playerB).should.equal(30);
+      });
     });
 
     it('There are always 15 balls after a new rack', function() {
@@ -149,20 +167,22 @@ describe('Rules', function() {
 });
 
 describe('Game', function() {
-  it('Accepts only an array of two players', function() {
-    {
+  describe('Creating a game', function() {
+    it('Accepts an array of two players', function() {
       const sut = new Game.Game( [playerA, playerB] );
       sut.players.length.should.equal(2);
       expect(sut.start).to.not.throw();
-    }
-    {
+    });
+
+    it('Throws with only one player', function() {
       const sut = new Game.Game( [playerA] );
       expect(sut.start).to.throw(Error);
-    }
-    {
+    });
+
+    it('Requires players to be of type Player', function() {
       const sut = new Game.Game( ['John', 'Jane'] );
       expect(sut.start).to.throw(Error);
-    }
+    });  
   });
 
   it('Gets events from players in turns until EndGame event is received', function() {
@@ -191,22 +211,22 @@ describe('Game', function() {
     bfSpy.should.have.been.called();
   });
 
-  it('Is played by all the rules', function() {
+  describe('Is played by all the rules', function() {
     const rules = [
       new Game.PottingRule(),
       new Game.FoulRule()
     ];
     const sut = new Game.Game(players, rules);
 
-    if (0) {
+    it('case 1', function() {
       const events = [
         // +1 for playerA
         new Game.GameEvent(playerA, 14, Game.GameEventType.MissedBall),
         // +9 for playerB
-        new Game.GameEvent(playerB, 5, Game.GameEventType.MissedBall),
+        new Game.GameEvent(playerB, 5, Game.GameEventType.Safety),
         // -1 for playerA
         new Game.GameEvent(playerA, 5, Game.GameEventType.Foul),
-        // +14 for playerB
+        // +4 for playerB
         new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
         // +14 for playerB
         new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
@@ -215,9 +235,10 @@ describe('Game', function() {
       ];
       const scoreboard = sut.calculateScore(events);
       scoreboard.getScore(playerA).should.equal(0);
-      scoreboard.getScore(playerB).should.equal(40);
-    }
-    {
+      scoreboard.getScore(playerB).should.equal(30);
+    });
+
+    it('case 2', function() {
       const events = [
         // -2 for playerA
         new Game.GameEvent(playerA, 15, Game.GameEventType.Foul),
@@ -233,6 +254,6 @@ describe('Game', function() {
       const scoreboard = sut.calculateScore(events);
       scoreboard.getScore(playerA).should.equal(7);
       scoreboard.getScore(playerB).should.equal(16);
-    }
-  })
+    });
+  });
 });

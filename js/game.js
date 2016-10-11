@@ -34,7 +34,7 @@ function Game(players, rules) {
       return rule.apply(events);
     });
 
-    return _.reduce(scoreboards, function(acc, val, {} ) {
+    return _.reduce(scoreboards, function(acc, val) {
       return acc.add(val);
     });
   }
