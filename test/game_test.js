@@ -82,7 +82,9 @@ describe('Rules', function() {
       const events = [
         new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
         new Game.GameEvent(playerB, 9, Game.GameEventType.Foul), // -1
+        new Game.GameEvent(playerA, 10, Game.GameEventType.Safety),
         new Game.GameEvent(playerB, 9, Game.GameEventType.Foul), // -1
+        new Game.GameEvent(playerA, 10, Game.GameEventType.Safety),
         new Game.GameEvent(playerB, 9, Game.GameEventType.Foul) // -15
       ];
       const scoreboard = sut.apply(events);

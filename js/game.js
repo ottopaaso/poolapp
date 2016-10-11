@@ -10,7 +10,8 @@ function Game(rules) {
 
 const GameEventType = {
   MissedBall: 'MissedBall',
-  Foul: 'Foul'
+  Foul: 'Foul',
+  Safety: 'Safety'
 }
 
 function GameEvent(player, ballsOnTable, eventType) {
