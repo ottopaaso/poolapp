@@ -41,8 +41,9 @@ describe('Scoreboard', function() {
 
 describe('Rules', function() {
   describe('PottingRule', function() {
-    it('Counts potted balls and adds points', function() {
-      const sut = new Game.PottingRule();
+    const sut = new Game.PottingRule();
+
+    it('Counts potted balls and counts points to a Scoreboard', function() {
       {
         const events = [new Game.GameEvent(playerA, 5)];
         const scoreboard = sut.apply(events);
@@ -56,18 +57,40 @@ describe('Rules', function() {
         scoreboard.getScore(playerB).should.equal(8);
       }
     });
+
+    it('Recognizes new racks', function() {
+      const events = [
+        new Game.GameEvent(playerA, 12, Game.GameEventType.MissedBall),
+        new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack)
+      ];
+
+      const scoreboard = sut.apply(events);
+      scoreboard.getScore(playerA).should.equal(3);
+      scoreboard.getScore(playerB).should.equal(11);
+    });
+
+    it('There are always 15 balls after a new rack', function() {
+        const events = [
+          new Game.GameEvent(playerA, 12, Game.GameEventType.MissedBall),
+          new Game.GameEvent(playerB, 10, Game.GameEventType.NewRack)
+        ];
+
+        const scoreboard = sut.apply(events);
+        scoreboard.getScore(playerA).should.equal(3);
+        scoreboard.getScore(playerB).should.equal(11);
+    });
   });
 
   describe('Foul rule', function() {
+    const sut = new Game.FoulRule();
+
     it('Reduces two points if fould is made after first shot', function() {
-      const sut = new Game.FoulRule();
       const events = [new Game.GameEvent(playerA, 15, Game.GameEventType.Foul)];
       const scoreboard = sut.apply(events);
       scoreboard.getScore(playerA).should.equal(-2);
     });
 
     it('Reduces one point if foul is made later in the game', function() {
-      const sut = new Game.FoulRule();
       const events = [
         new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
         new Game.GameEvent(playerB, 9, Game.GameEventType.Foul)
@@ -78,7 +101,6 @@ describe('Rules', function() {
     });
 
     it('Reduces 15 points if three consecutive fouls are made', function() {
-      const sut = new Game.FoulRule();
       const events = [
         new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
         new Game.GameEvent(playerB, 9, Game.GameEventType.Foul), // -1
@@ -101,7 +123,11 @@ describe('Game', function() {
   });
 
   it('Is played by the rules', function() {
-    const rules = [];
+    const rules = [
+      new Game.PottingRule(),
+      new Game.FoulRule()
+    ];
+
     const sut = new Game.Game(rules);
   })
 });

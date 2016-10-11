@@ -11,7 +11,8 @@ function Game(rules) {
 const GameEventType = {
   MissedBall: 'MissedBall',
   Foul: 'Foul',
-  Safety: 'Safety'
+  Safety: 'Safety',
+  NewRack: 'NewRack'
 }
 
 function GameEvent(player, ballsOnTable, eventType) {
@@ -33,11 +34,16 @@ function PottingRule() {
     var ballsOnTable = 15;
     _.forEach(events, function(event) {
       const scoreObject = _.find(scores, function(value) {
-        return value.player === event.player;
+        return _.isEqual(value.player, event.player);
       });
 
-      scoreObject.score += (ballsOnTable - event.ballsOnTable);
-      ballsOnTable = event.ballsOnTable;
+      if ( _.isEqual(event.eventType, GameEventType.NewRack) ) {
+        scoreObject.score += (ballsOnTable - 1);
+        ballsOnTable = 15;
+      } else {
+        scoreObject.score += (ballsOnTable - event.ballsOnTable);
+        ballsOnTable = event.ballsOnTable;
+      }
     });
 
     return new Scoreboard(scores);
@@ -62,10 +68,10 @@ function FoulRule() {
 
     _.forEach(events, function(event) {
       const scoreObject = _.find(scores, function(value) {
-        return value.player === event.player;
+        return _.isEqual(value.player, event.player);
       });
 
-      if (event.eventType !== GameEventType.Foul) {
+      if ( !_.isEqual(event.eventType, GameEventType.Foul) ) {
         scoreObject.consecutiveFoulCount = 0;
         return;
       }
@@ -87,7 +93,7 @@ function Scoreboard(scores) {
 
   this.getScore = function(player) {
     const result = _.find(this.scores, function(score) {
-      return score.player === player;
+      return _.isEqual(score.player, player);
     });
 
     return result ? result.score : undefined;
