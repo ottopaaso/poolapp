@@ -28,6 +28,16 @@ function Game(players, rules) {
       }
     }
   };
+
+  this.calculateScore = function(events) {
+    const scoreboards = _.map(mRules, function(rule) {
+      return rule.apply(events);
+    });
+
+    return _.reduce(scoreboards, function(acc, val, {} ) {
+      return acc.add(val);
+    });
+  }
 }
 
 const GameEventType = {
@@ -121,6 +131,23 @@ function Scoreboard(scores) {
 
     return result ? result.score : undefined;
   };
+
+  this.add = function(other) {
+    var scoreObj = _.map(this.scores, function(score) { return score; });
+    _.forEach(other.scores, function(otherScore) {
+      var obj = _.find(scoreObj, function(score) {
+        return score.player == otherScore.player;
+      });
+
+      if (obj) {
+        obj.score += otherScore.score;
+      } else {
+        scoreObj.push(otherScore);
+      }
+    });
+
+    return new Scoreboard(scoreObj);
+  }
 }
 
 module.exports = {

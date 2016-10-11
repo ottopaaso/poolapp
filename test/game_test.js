@@ -52,14 +52,22 @@ describe('GameEvent', function() {
 });
 
 describe('Scoreboard', function() {
+  const sut = new Game.Scoreboard( [
+    { player: playerA, score: 0 },
+    { player: playerB, score: 50 }
+  ]);
+
   it('Contains scores for players', function() {
-    const sut = new Game.Scoreboard( [
-      { player: playerA, score: 0 },
-      { player: playerB, score: 50 }
-    ]);
     sut.getScore(playerA).should.equal(0);
     sut.getScore(playerB).should.equal(50);
     expect(sut.getScore(null)).to.be.undefined;
+  });
+
+  it('Can add other scoreboard to self and return a new one', function() {
+    const other = new Game.Scoreboard( [ { player: playerA, score: 10 } ] );
+    const result = sut.add(other);
+    result.getScore(playerA).should.equal(10);
+    result.getScore(playerB).should.equal(50);
   });
 });
 
@@ -183,13 +191,48 @@ describe('Game', function() {
     bfSpy.should.have.been.called();
   });
 
-  it('Is played by the rules', function() {
+  it('Is played by all the rules', function() {
     const rules = [
       new Game.PottingRule(),
       new Game.FoulRule()
     ];
+    const sut = new Game.Game(players, rules);
 
-    const sut = new Game.Game(rules);
-
+    if (0) {
+      const events = [
+        // +1 for playerA
+        new Game.GameEvent(playerA, 14, Game.GameEventType.MissedBall),
+        // +9 for playerB
+        new Game.GameEvent(playerB, 5, Game.GameEventType.MissedBall),
+        // -1 for playerA
+        new Game.GameEvent(playerA, 5, Game.GameEventType.Foul),
+        // +14 for playerB
+        new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
+        // +14 for playerB
+        new Game.GameEvent(playerB, 15, Game.GameEventType.NewRack),
+        // +3 for playerB
+        new Game.GameEvent(playerB, 12, Game.GameEventType.EndGame)
+      ];
+      const scoreboard = sut.calculateScore(events);
+      scoreboard.getScore(playerA).should.equal(0);
+      scoreboard.getScore(playerB).should.equal(40);
+    }
+    {
+      const events = [
+        // -2 for playerA
+        new Game.GameEvent(playerA, 15, Game.GameEventType.Foul),
+        // +9 for playerB
+        new Game.GameEvent(playerB, 5, Game.GameEventType.Foul),
+        // +4 for playerA
+        new Game.GameEvent(playerA, 5, Game.GameEventType.NewRack),
+        // +5 for playerA
+        new Game.GameEvent(playerA, 10, Game.GameEventType.MissedBall),
+        // +7 for playerB
+        new Game.GameEvent(playerB, 3, Game.GameEventType.EndGame)
+      ];
+      const scoreboard = sut.calculateScore(events);
+      scoreboard.getScore(playerA).should.equal(7);
+      scoreboard.getScore(playerB).should.equal(16);
+    }
   })
 });
